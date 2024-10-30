@@ -1,0 +1,31 @@
+#!/bin/bash
+
+unset CC CXX CC_FOR_BUILD CXX_FOR_BUILD
+
+export PATH="$(pwd)/host_tools:$PATH"
+
+echo ">> Setting up lua..."
+
+for luaver in ${LUA_VERSIONS}; do
+    mv lua-${luaver} deps-${luaver} || exit 1
+done
+
+echo ">> Building and testing cffi..."
+
+args=""
+if [ -n "$BUILDTYPE" ]; then
+    args="${args} --buildtype=$BUILDTYPE"
+fi
+
+for luaver in ${LUA_VERSIONS}; do
+    mkdir -p build-${luaver}
+    cd build-${luaver}
+
+    cmd.exe //C 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat' amd64 '&&' \
+    meson .. -Dlua_version=vendor -Ddeps_dir=deps-${luaver} ${args} '&&' \
+    ninja all '&&' ninja test || exit 1
+
+    cd ..
+done
+
+exit 0

@@ -1,0 +1,244 @@
+#!/bin/sh
+
+expected_triplet=$TARGET
+
+if [ -z "$expected_triplet" ]; then
+    echo "ERROR: target triplet not provided!"
+    exit 1
+fi
+
+current_triplet=`$CC -dumpmachine`
+
+if [ "$CC" = "clang" ]; then
+    export CXX="clang++"
+else
+    export CXX="g++"
+fi
+
+if [ "$TARGET" != "darwin" -a "$CC" != "clang" -a "$expected_triplet" != "$current_triplet" ]; then
+    cross=yes
+    export CC="${expected_triplet}-${CC}"
+    export CXX="${expected_triplet}-${CXX}"
+    export STRIP="${expected_triplet}-strip"
+    export AR="${expected_triplet}-ar"
+    export AS="${expected_triplet}-as"
+else
+    export STRIP="strip"
+    export AR="ar"
+fi
+
+extra_cflags="-fPIC"
+meson_system="linux"
+
+case "${expected_triplet}" in
+    darwin)
+        # special case here
+        meson_system="darwin"
+        ;;
+    x86_64*)
+        meson_cpu_family="x86_64"
+        meson_cpu="x86_64"
+        meson_endian="little"
+        case "${expected_triplet}" in
+            *w64*)
+                meson_system="windows"
+                extra_cflags=""
+                ;;
+            *)
+                qemu_cpu="x86_64"
+                ;;
+        esac
+        ;;
+    i686*)
+        meson_cpu_family="x86"
+        meson_cpu="i686"
+        meson_endian="little"
+        qemu_cpu="i386"
+        ;;
+    powerpc64le*)
+        meson_cpu_family="ppc64"
+        meson_cpu="ppc64le"
+        meson_endian="little"
+        qemu_cpu="ppc64le"
+        ;;
+    powerpc64*)
+        meson_cpu_family="ppc64"
+        meson_cpu="ppc64"
+        meson_endian="big"
+        qemu_cpu="ppc64"
+        ;;
+    powerpcle*)
+        echo "ERROR: ppcle not supported in qemu"
+        exit 1
+        ;;
+    powerpc*)
+        meson_cpu_family="ppc"
+        meson_cpu="ppc"
+        meson_endian="big"
+        qemu_cpu="ppc"
+        ;;
+    aarch64-*)
+        meson_cpu_family="aarch64"
+        meson_cpu="aarch64"
+        meson_endian="little"
+        qemu_cpu="aarch64"
+        ;;
+    arm-*)
+        meson_cpu_family="arm"
+        meson_cpu="armv6l"
+        meson_endian="little"
+        qemu_cpu="arm"
+        ;;
+    riscv64-*)
+        meson_cpu_family="riscv64"
+        meson_cpu="riscv64"
+        meson_endian="little"
+        qemu_cpu="riscv64"
+        ;;
+    s390x*)
+        meson_cpu_family="s390x"
+        meson_cpu="s390x"
+        meson_endian="big"
+        qemu_cpu="s390x"
+        ;;
+    mips-*)
+        meson_cpu_family="mips"
+        meson_cpu="mips"
+        meson_endian="big"
+        qemu_cpu="mips"
+        ;;
+    m68k*)
+        meson_cpu_family="m68k"
+        meson_cpu="m68k"
+        meson_endian="big"
+        qemu_cpu="m68k"
+        ;;
+    *)
+        echo "ERROR: Cross CPU unspecified"
+        exit 1
+        ;;
+esac
+
+export PATH="$(pwd)/host_tools:$PATH"
+
+if [ -n "$qemu_cpu" -a -n "$cross" ]; then
+    echo ">> Preparing qemu..."
+    # work around glibc being dumb
+    # the cache format is not endian agnostic, so unless a dummy file exists
+    # here, qemu will try to use host's and it will crash guest glibc on BE
+    sudo mkdir -p /usr/${expected_triplet}/etc
+    sudo touch /usr/${expected_triplet}/etc/ld.so.cache
+fi
+
+# sanitizer setup, need asan-instrumented lua
+if [ -n "$SANITIZE" ]; then
+    extra_cflags="${extra_cflags} -fsanitize=address"
+    extra_ldflags="${extra_ldflags} -fsanitize=address -fuse-ld=lld"
+    # cfi-icall is buggy with the clang on CI, also the same functionality
+    # is covered by -fsanitize=function (included in undefined)
+    export CXXFLAGS="-fsanitize=undefined -fsanitize-trap=undefined -fsanitize=address -fsanitize=cfi -fno-sanitize=cfi-icall -fvisibility=hidden -flto=thin"
+    export LDFLAGS="${CXXFLAGS} -fuse-ld=lld"
+    # only test the most recent lua version
+    LUA_VERSIONS=${LUA_VERSIONS%% *}
+fi
+
+echo ">> Building lua..."
+
+lua_plat=linux
+case "$TARGET" in
+    darwin) lua_plat=macosx;;
+    x86_64-w64*) lua_plat=mingw;;
+esac
+
+for luaver in ${LUA_VERSIONS}; do
+    deps_dir="deps-${luaver}-${expected_triplet}"
+    deps_path="$(pwd)/${deps_dir}"
+    wine_pfx="$(pwd)/.wine"
+    mkdir -p ${deps_dir}/include
+    cd lua-${luaver}
+    # drop unneeded functionality that'd be a hassle otherwise
+    if [ "$lua_plat" = "linux" ]; then
+        sed -i '/.*define LUA_USE_READLINE/d' src/luaconf.h
+        sed -i 's/-lreadline//g' src/Makefile
+        sed -i 's/-lhistory//g' src/Makefile
+        sed -i 's/-lncurses//g' src/Makefile
+    fi
+    make -j8 PLAT=${lua_plat} MYCFLAGS="${extra_cflags}" MYLDFLAGS="${extra_ldflags}" CC="$CC" AR="$AR rcu" || exit 1
+    cp src/lua*.h* ../${deps_dir}/include || exit 1
+    cp src/lauxlib.h ../${deps_dir}/include || exit 1
+    if [ "${meson_system}" = "windows" ]; then
+        cp src/lua*.dll ../${deps_dir} || exit 1
+    fi
+    if [ -d "etc" -a -f "etc/lua.hpp" ]; then
+        cp etc/lua.hpp ../${deps_dir}/include
+    fi
+    if [ -n "${cross}" ]; then
+        if [ "${meson_system}" = "windows" ]; then
+            cp src/lua.exe ../${deps_dir} || exit 1
+            cat << EOF > ../${deps_dir}/lua
+#!/bin/sh
+export WINEDEBUG=-all
+export WINEPREFIX="${wine_pfx}"
+export DISPLAY=
+wine ${deps_path}/lua.exe "\$@"
+EOF
+        else
+            cp src/lua ../${deps_dir}/lua.target || exit 1
+            cat << EOF > ../${deps_dir}/lua
+#!/bin/sh
+qemu-${qemu_cpu} -L /usr/${expected_triplet} ${deps_path}/lua.target "\$@"
+EOF
+        fi
+        chmod +x ../${deps_dir}/lua
+        echo ">> Testing cross lua:"
+        ../${deps_dir}/lua -v || exit 1
+    else
+        cp src/lua ../${deps_dir} || exit 1
+    fi
+    cd ..
+done
+
+echo ">> Building and testing cffi..."
+
+# lsan seems broken in the ci env?
+export LSAN_OPTIONS=detect_leaks=0
+
+for luaver in ${LUA_VERSIONS}; do
+    deps_dir="deps-${luaver}-${expected_triplet}"
+    lua_path="$(pwd)/${deps_dir}/lua"
+
+    mkdir -p build-${luaver}-${expected_triplet}
+    cd build-${luaver}-${expected_triplet}
+
+    args=""
+    if [ -n "${cross}" ]; then
+        cat << EOF > crossfile
+[binaries]
+c = '${CC}'
+cpp = '${CXX}'
+strip = '${STRIP}'
+
+[host_machine]
+system = '${meson_system}'
+cpu_family = '${meson_cpu_family}'
+cpu = '${meson_cpu}'
+endian = '${meson_endian}'
+EOF
+        args="${args} --cross-file=crossfile"
+    fi
+    if [ -n "$BUILDTYPE" ]; then
+        args="${args} --buildtype=$BUILDTYPE"
+    fi
+    # needed for CFI and -fsanitize=function
+    if [ -n "$SANITIZE" ]; then
+        args="${args} -Db_lto=true -Dcpp_rtti=true"
+    fi
+
+    meson .. -Dlua_version=vendor -Dtests_cross=true \
+        -Ddeps_dir=${deps_dir} -Dlua_path="${lua_path}" ${args} || exit 1
+    ninja all --verbose || exit 1
+    ninja test || exit 1
+    cd ..
+done
+
+exit 0

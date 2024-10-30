@@ -1,0 +1,53 @@
+option('lua_version',
+    type: 'combo',
+    choices: ['auto', 'luajit', 'custom', 'vendor', '5.1', '5.2', '5.3', '5.4'],
+    description: 'The Lua version to use (custom == pass via CXXFLAGS/LDFLAGS)'
+)
+
+option('libffi',
+    type: 'combo',
+    choices: ['auto', 'custom', 'vendor'],
+    description: 'When using auto, pkg-config will be used to find libffi'
+)
+
+option('lua_install_path',
+    type: 'string',
+    value: 'auto',
+    description: 'The install path for the Lua module'
+)
+
+option('shared_libffi',
+    type: 'boolean',
+    value: 'false',
+    description: 'Assume import library for libffi (Windows only)'
+)
+
+option('deps_dir',
+    type: 'string',
+    value: 'deps',
+    description: 'The name of vendored dependencies directory'
+)
+
+option('static',
+    type: 'boolean',
+    value: 'false',
+    description: 'Build a static library, not a module'
+)
+
+option('tests',
+    type: 'boolean',
+    value: 'true',
+    description: 'Whether to build tests'
+)
+
+option('tests_cross',
+    type: 'boolean',
+    value: 'false',
+    description: 'Whether to build tests when cross-compiling'
+)
+
+option('lua_path',
+    type: 'string',
+    value: 'auto',
+    description: 'Path to lua executable for tests'
+)

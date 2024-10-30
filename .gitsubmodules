@@ -1,0 +1,3 @@
+[submodule "tuya-open-sdk-for-device"]
+	path = tuya-open-sdk-for-device
+	url = https://registry.code.tuya-inc.top/embtuyaoscategory/wifi/tuya-open-sdk-for-device

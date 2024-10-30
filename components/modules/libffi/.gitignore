@@ -1,0 +1,6 @@
+include/ffi.h
+include/ffitarget.h
+build/
+makefiles.mk~
+makefiles.out~
+makefiles.sed~

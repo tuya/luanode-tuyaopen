@@ -1,0 +1,11 @@
+language: python
+python:
+  - 3.6
+  - 3.7
+
+# command to install dependencies
+install: "pip install -r test_requirements.txt"
+
+# command to run tests
+script:
+  - coverage run setup.py test

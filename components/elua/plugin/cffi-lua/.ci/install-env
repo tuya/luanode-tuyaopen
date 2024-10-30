@@ -1,0 +1,99 @@
+#!/bin/sh
+
+expected_triplet=$TARGET
+
+if [ -z "$expected_triplet" ]; then
+    echo "ERROR: target triplet not provided!"
+    exit 1
+fi
+
+ensure_tool() {
+    command -v "$1" > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Missing tool: $1"
+        exit 1
+    fi
+}
+
+if [ "$(uname -s)" = "Linux" ]; then
+    is_linux=yes
+fi
+
+echo ">> Checking tools..."
+
+ensure_tool gcc
+ensure_tool g++
+ensure_tool clang
+ensure_tool clang++
+ensure_tool git
+ensure_tool tar
+ensure_tool wget
+ensure_tool make
+
+mkdir -p host_tools
+
+echo ">> Updating package database..."
+
+[ -n "$is_linux" ] && sudo apt-get update
+
+echo ">> Installing meson..."
+
+if [ -n "$is_linux" ]; then
+    sudo apt-get install ninja-build
+else
+    ninja_version=1.10.2
+    cd host_tools
+    wget "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-mac.zip" || exit 1
+    tar xf ninja-mac.zip || exit 1
+    rm ninja-mac.zip
+    cd ..
+    export PATH="$(pwd)/host_tools:$PATH"
+fi
+
+if [ -n "$(command -v pip3)" ]; then
+    sudo pip3 install --break-system-packages meson || sudo pip3 install meson || exit 1
+elif [ -n "$(command -v pip)" ]; then
+    sudo pip install --break-system-packages meson || sudo pip install meson || exit 1
+else
+    echo "ERROR: pip not found"
+    exit 1
+fi
+
+ensure_tool meson
+ensure_tool ninja
+
+echo ">> Getting lua..."
+
+for luaver in ${LUA_VERSIONS}; do
+    wget "https://www.lua.org/ftp/lua-${luaver}.tar.gz" || exit 1
+    tar xf lua-${luaver}.tar.gz || exit 1
+done
+
+if [ "$(uname -s)" != "Linux" ]; then
+    exit 0
+fi
+
+current_triplet=`gcc -dumpmachine`
+
+if [ -z "$current_triplet" ]; then
+    echo "ERROR: Native compiler not present!"
+    exit 1
+fi
+
+if [ "$expected_triplet" = "$current_triplet" ]; then
+    exit 0
+fi
+
+echo ">> Installing toolchain..."
+
+if [ "$expected_triplet" = "x86_64-w64-mingw32" ]; then
+    gcc_suffix="mingw-w64"
+    extra_packages="wine"
+else
+    gcc_suffix="${expected_triplet}"
+    extra_packages="qemu-user"
+fi
+
+sudo apt-get install gcc-${gcc_suffix} g++-${gcc_suffix} ${extra_packages} || exit 1
+
+exit $?

@@ -1,0 +1,38 @@
+
+LUA_LIBDIR=c:\usr\local\lib\lua
+LUA_DIR=c:\usr\local\share\lua\5.1
+BIN_DIR=c:\usr\local\bin
+CFLAGS=/O2 /DWINDOWS /D_WIN64 /Ic:\usr\local\include
+LIB_OPTION="c:\usr\local\bin\lua5.1.lib"
+PREFIX=c:\usr\local
+
+.c.obj:
+	cl /c /MD /Fo$@ /DFFI_BUILDING $(CFLAGS) $<
+
+all: src\alien_c.dll tests\alientest.dll
+	IF EXIST src\alien_c.dll.manifest del src\alien_c.dll.manifest
+	IF EXIST tests\alientest.dll.manifest del tests\alientest.dll.manifest
+
+src\alien_c.dll: src\alien.obj
+	link /dll /out:src\alien_c.dll /def:src\alien.def src\alien.obj $(LIB_OPTION)
+	IF EXIST src\alien_c.dll.manifest mt -manifest src\alien_c.dll.manifest -outputresource:src\alien_c.dll;2
+
+tests\alientest.dll:
+	cl /c /MD $(CFLAGS) /Fotests\alientest.obj tests\alientest.c
+	link /dll /out:tests\alientest.dll tests\alientest.obj $(LIB_OPTION)
+	IF EXIST tests\alientest.dll.manifest mt -manifest tests\alientest.dll.manifest -outputresource:tests\alientest.dll;2
+
+install:
+	copy src\alien_c.dll "$(LUA_LIBDIR)"
+	copy src\alien.lua "$(LUA_DIR)\"
+	copy src\constants "$(BIN_DIR)\"
+	xcopy /E /S tests "$(PREFIX)\tests\"
+	xcopy /E /S samples "$(PREFIX)\samples\"
+	xcopy /E /S doc "$(PREFIX)\doc\"
+
+clean:
+	del src\alien\*.dll src\alien\*.obj src\alien\*.exp src\alien\*.lib src\alien\*.dll.manifest
+	del tests\alientest.dll tests\alientest.obj tests\alientest.exp tests\alientest.lib tests\alientest.dll.manifest
+
+test:
+	cd tests && lua5.1 test_alien.lua

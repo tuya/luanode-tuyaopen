@@ -1,1 +1,1 @@
-# tuya-open-sdk-for-lua
+# luanode-tuyaopen

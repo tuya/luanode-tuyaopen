@@ -1,0 +1,34 @@
+#!/bin/bash
+
+ninja_version=1.10.2
+
+echo ">> Installing meson..."
+
+mkdir -p host_tools
+
+curl -L -o ninja.zip https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-win.zip || exit 1
+7z x ninja.zip || exit 1
+mv ninja.exe host_tools
+
+pip3 install meson
+
+echo ">> Getting lua..."
+
+lua_build="Win64_dll16_lib"
+lua_bin="Win64_bin"
+
+for luaver in ${LUA_VERSIONS}; do
+    lua_dmaj=${luaver:0:3}
+    lua_maj=${lua_dmaj/./}
+    # lua from luabinaries
+    curl -L -o lua-${luaver}-bin.zip https://downloads.sourceforge.net/project/luabinaries/${luaver}/Tools%20Executables/lua-${luaver}_${lua_bin}.zip || exit 1
+    curl -L -o lua-${luaver}-lib.zip https://downloads.sourceforge.net/project/luabinaries/${luaver}/Windows%20Libraries/Dynamic/lua-${luaver}_${lua_build}.zip || exit 1
+    mkdir lua-${luaver}
+    cd lua-${luaver}
+    # unzip bin first
+    7z x ../lua-${luaver}-bin.zip || exit 1
+    7z x ../lua-${luaver}-lib.zip -y || exit 1
+    cd ..
+done
+
+exit 0
