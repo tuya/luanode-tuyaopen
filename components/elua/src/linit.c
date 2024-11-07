@@ -32,6 +32,7 @@
 // #define LUA_LIB_MODBUS
 #define LUA_LIB_IO
 #define LUA_LIB_TABLE
+#define LUA_LIB_MQTT
 #include "lprefix.h"
 #include <stddef.h>
 #include "lua.h"
@@ -55,6 +56,7 @@ LUAMOD_API int luaopen_gpio_lib(lua_State *L);
 LUAMOD_API int luaopen_event(lua_State *L);
 LUAMOD_API int luaopen_tuyaos(lua_State *L);
 LUAMOD_API int luaopen_kv(lua_State *L);
+LUAMOD_API int luaopen_socket_core(lua_State *L);
 #endif
 
 #if defined(LUA_LIB_ZBUFF)
@@ -67,6 +69,10 @@ LUAMOD_API int luaopen_cjson(lua_State *L);
 
 #if defined(LUA_LIB_MODBUS)
 LUAMOD_API int luaopen_rtu_modbus_master(lua_State *L);
+#endif
+
+#if defined(LUA_LIB_MQTT)
+LUAMOD_API int luaopen_mqttc(lua_State *L);
 #endif
 
 LUAMOD_API int luaopen_ringbuff(lua_State *L);
@@ -134,6 +140,9 @@ static const luaL_Reg loadedlibs[] = {
 #ifdef ENABLE_FFI
   {"ffi",luaopen_cffi},
 #endif
+#ifdef LUA_LIB_MQTT
+  {"mqtt", luaopen_mqttc},
+#endif
 
   {NULL, NULL}
 };
@@ -146,5 +155,8 @@ LUALIB_API void luaL_openlibs (lua_State *L) {
     luaL_requiref(L, lib->name, lib->func, 1);
     lua_pop(L, 1);  /* remove lib */
   }
+
+  luaopen_socket_core(L);
+  lua_setglobal(L, "socket");
 }
 

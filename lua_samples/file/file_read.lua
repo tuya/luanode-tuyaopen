@@ -1,17 +1,16 @@
 -- Read an existing file
 
-fd = io.open("init.lua", "r");
+-- read all character from the file
+fd = io.open("init.lua", "r")
+if fd then
+    content = fd:read('a')
+    print(content)
 
-while true do
-  if(res == false) then 
-    print("Open file failed");
-    break;
-  end
-  
-  -- read 64 character from the file
-  content = fd:read(64);
-  print(content);
-  fd:close();
+    fd:seek("cur", -#content)
+    content = fd:read(10)
+    print(content)
 
-  break;
+    content = fd:read('L')
+    print(content)
+    fd:close()
 end

@@ -1,18 +1,10 @@
 -- FS information, format operation
+-- List
+for k,v in pairs(io.list("/")) do print(k, v) end
 
-size = file.fsinfo();
-print(size);	-- print total size of the FS
+-- exist
+print(io.exists("init.lua"))
+print(io.exists("test.lua"))
 
--- print FS detail
-detail = file.list();
-for k,v in pairs(detail) do
-  print(k, v);
-end
-
-
--- format FS, remove all content in FS
-file.format();
-detail = file.list();
-for k,v in pairs(detail) do
-  print(k, v);	-- nothing to print
-end
+-- size
+print(io.filesize("init.lua"))

@@ -445,7 +445,7 @@ static const rotable_Reg_t reg_crypto[] =
     { "hmac_sha1" ,     ROREG_FUNC(l_crypto_hmac_sha1      )},
     { "crc16",          ROREG_FUNC(l_crypto_crc16          )},
     { "crc16_modbus",   ROREG_FUNC(l_crypto_crc16_modbus   )},
-    {"crc16_modbus_array",ROREG_FUNC(l_crypto_crc16_array_modbus)},
+    { "crc16_modbus_array",ROREG_FUNC(l_crypto_crc16_array_modbus)},
     { "crc32",          ROREG_FUNC(l_crypto_crc32          )},
     { "crc8",           ROREG_FUNC(l_crypto_crc8           )},
     { "hash_init",      ROREG_FUNC(l_crypt_hash_init)},

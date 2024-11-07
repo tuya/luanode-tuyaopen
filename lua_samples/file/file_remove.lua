@@ -1,15 +1,9 @@
 -- Remove file
 
-res = file.open("test.lua", "w");
-
-while true do
-  if(res == false) then
-	print("Open file failed");
-	break;
-  end
-
-  file.close();
-  file.remove("test.lua");	-- remove file
-
-  break;
+fd = io.open("test.lua", "w")
+if fd then
+    fd:close()
+    for k,v in pairs(io.list("/")) do print(k, v) end
+    io.remove("test.lua")
+    for k,v in pairs(io.list("/")) do print(k, v) end
 end

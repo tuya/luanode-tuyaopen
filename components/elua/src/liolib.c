@@ -613,8 +613,8 @@ static int g_read (lua_State *L, FILE *f, int first) {
       }
     }
   }
-  if (ferror(f))
-    return luaL_fileresult(L, 0, NULL);
+  // if (ferror(f))
+  //   return luaL_fileresult(L, 0, NULL);
   if (!success) {
     lua_pop(L, 1);  /* remove last result */
     lua_pushnil(L);  /* push nil instead */
@@ -846,14 +846,14 @@ static const rotable_Reg_t iolib[] = {
   {"close", ROREG_FUNC(io_close)},
   // {"flush", ROREG_FUNC(io_flush)},
   // {"input", ROREG_FUNC(io_input)},
-  {"lines", ROREG_FUNC(io_lines)},
+  // {"lines", ROREG_FUNC(io_lines)},
   {"open", ROREG_FUNC(io_open)},
   // {"output", ROREG_FUNC(io_output)},
   // {"popen", io_popen},
   // {"read", ROREG_FUNC(io_read)},
   // {"tmpfile", io_tmpfile},
   {"exists", ROREG_FUNC(io_exists)},
-  {"fileSize", ROREG_FUNC(io_fileSize)},
+  {"filesize", ROREG_FUNC(io_fileSize)},
   {"type", ROREG_FUNC(io_type)},
   {"list", ROREG_FUNC(io_list)},
   {"remove", ROREG_FUNC(io_remove)},
