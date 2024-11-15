@@ -18,9 +18,18 @@ static LUA_GPIO_CTX_T s_gpio_irq_ctx[TUYA_GPIO_NUM_MAX]={{LUA_NOREF,-1}};
 static int l_tkl_gpio_init(lua_State *L)
 {
     int pin = luaL_checkinteger(L,1);
-    int  direct = luaL_checkinteger(L,2);
-    int mode = luaL_checkinteger(L,3);
-    int level = luaL_checkinteger(L,4);
+    int direct = luaL_checkinteger(L,2);
+    int level = 0; // for output
+    int mode = 0; // for input
+    if (direct == TUYA_GPIO_INPUT) {
+        mode = luaL_checkinteger(L,3);
+    } else if (direct == TUYA_GPIO_OUTPUT) {
+        level = luaL_checkinteger(L,3);
+    } else {
+        lua_pushboolean(L, OPRT_INVALID_PARM);
+        return 1;
+    }
+
     TUYA_GPIO_BASE_CFG_T cfg={
         .direct = direct,
         .mode = mode,
@@ -97,7 +106,7 @@ static int l_tkl_gpio_irq_init(lua_State *L)
     int pin = luaL_checkinteger(L,1);
     int irq_mode = luaL_checkinteger(L,2);
     luaL_checktype(L, 3, LUA_TFUNCTION);
-    luaL_checktype(L, 3, LUA_TFUNCTION);
+    // luaL_checktype(L, 3, LUA_TFUNCTION);
     lua_pushvalue(L, 3);
     s_gpio_irq_ctx[pin].lua_ref = luaL_ref(L, LUA_REGISTRYINDEX);
     TUYA_GPIO_IRQ_T cfg;
@@ -127,8 +136,8 @@ static int l_tkl_gpio_irq_disable(lua_State *L)
 
 #include "rotable2.h"
 static const rotable_Reg_t tkl_gpio_lib[]  = {
-    {"init",        ROREG_FUNC(l_tkl_gpio_init)},
-    {"deinit",      ROREG_FUNC(l_tkl_gpio_deinit)},
+    {"open",        ROREG_FUNC(l_tkl_gpio_init)},
+    {"close",       ROREG_FUNC(l_tkl_gpio_deinit)},
     {"read",        ROREG_FUNC(l_tkl_gpio_read)},
     {"write",       ROREG_FUNC(l_tkl_gpio_write)},
     {"set_irq",     ROREG_FUNC(l_tkl_gpio_irq_init)},

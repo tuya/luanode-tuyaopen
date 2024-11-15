@@ -6,16 +6,16 @@ isOff = false
 
 led_blink = function()
   if(isOff) then
-	gpio.write(2, 1);	-- turn on
+	gpio.write(2, gpio.HIGH);	-- turn on
 	isOff = false
   else
-	gpio.write(2, 0);	-- turn off
+	gpio.write(2, gpio.LOW);	-- turn off
 	isOff = true
   end
 end
 
---gpio.mode(2,gpio.OUTPUT);
+gpio.open(2, gpio.OUTPUT, gpio.LOW);
+tmr = timer.start(1000, timer.CYCLE, led_blink)
 
-period = 1000;
-tmr.register(1, period, tmr.ALARM_AUTO, led_blink);
-tmr.start(1);
+-- timer.stop(tmr)
+-- timer.delete(tmr)

@@ -916,7 +916,7 @@ void luaproc_set_numargs( luaproc *lp, int n ) {
 /**********************************
  * register structs and functions *
  **********************************/
-
+LUAMOD_API int luaopen_system (lua_State *L) ;
 static void luaproc_reglualib( lua_State *L, const char *name,
                                lua_CFunction f ) {
   lua_getglobal( L, "package" );
@@ -933,26 +933,36 @@ LUAMOD_API int luaopen_cjson(lua_State *L);
 static void luaproc_openlualibs( lua_State *L ) {
   requiref( L, "_G", luaopen_base, FALSE );
   requiref( L, "package", luaopen_package, TRUE );
-  luaproc_reglualib( L, "io", luaopen_io );
-  luaproc_reglualib( L, "os", luaopen_os );
-  luaproc_reglualib( L, "table", luaopen_table );
-  luaproc_reglualib( L, "string", luaopen_string );
-  luaproc_reglualib( L, "math", luaopen_math );
-  luaproc_reglualib( L, "debug", luaopen_debug );
+  requiref( L, "io", luaopen_io, TRUE );
+  requiref( L, "os", luaopen_os, TRUE );
+  requiref( L, "table", luaopen_table, TRUE );
+  requiref( L, "string", luaopen_string, TRUE );
+  requiref( L, "math", luaopen_math, TRUE );
+  requiref( L, "debug", luaopen_debug, TRUE );
+  // luaproc_reglualib( L, "io", luaopen_io );
+  // luaproc_reglualib( L, "os", luaopen_os );
+  // luaproc_reglualib( L, "table", luaopen_table );
+  // luaproc_reglualib( L, "string", luaopen_string );
+  // luaproc_reglualib( L, "math", luaopen_math );
+  // luaproc_reglualib( L, "debug", luaopen_debug );
 #if (LUA_VERSION_NUM == 502)
   luaproc_reglualib( L, "bit32", luaopen_bit32 );
 #endif
 #if (LUA_VERSION_NUM >= 502)
-  luaproc_reglualib( L, "coroutine", luaopen_coroutine );
+  requiref( L, "coroutine", luaopen_coroutine, TRUE );
+  // luaproc_reglualib( L, "coroutine", luaopen_coroutine );
 #endif
 #if (LUA_VERSION_NUM >= 503)
-  luaproc_reglualib( L, "utf8", luaopen_utf8 );
+  requiref( L, "utf8", luaopen_utf8, TRUE );  
+  // luaproc_reglualib( L, "utf8", luaopen_utf8 );
 #endif
 #ifdef ENABLE_FFI
     luaproc_reglualib(L,"ffi",luaopen_cffi);
 #endif
-    luaproc_reglualib(L,"tyos",luaopen_tyos);
-    luaproc_reglualib(L,"json",luaopen_cjson);
+  requiref( L,"sys",luaopen_system, TRUE ); 
+  // luaproc_reglualib(L,"sys",luaopen_system); 
+    // luaproc_reglualib(L,"tyos",luaopen_tyos);
+    // luaproc_reglualib(L,"json",luaopen_cjson);
 }
 
 LUALIB_API int luaopen_luaproc( lua_State *L ) {

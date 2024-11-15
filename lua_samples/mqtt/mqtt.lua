@@ -33,22 +33,31 @@
 
 -- new a client and connect to server
 c = mqtt.new() 
--- set ca
--- c:ca("...")
+
+-- upload broker.emqx.io.ca.crt to target board
+-- for ssl mqtt, need change the port from 1883 to 8883
+-- fd = io.open("broker.emqx.io.ca.crt")
+-- cert = fd:read('a')
+-- fd:close()
+-- c:ca(cert)
+
+-- connect
 c:on("conack", function () print("lua recv connect ack") end)
 c:on("disconack", function () print("lua recv dis-connect ack") end)
 c:connect({host="broker.emqx.io", port=1883, client_id="tuya-open-sdk-for-device-01", user_name="emqx", passwd="public"})
 
-
+-- subscribe
 c:on("message", function (t,q,l,p,u) print(t,q,l,p,u) end)
 c:on("suback", function () print("lua recv subscibe ack") end)
 c:subscribe("test", 0) 
 c:subscribe("test1", 1)
 
+-- unsubscribe
 c:on("unsuback", function () print("lua recv unsubscibe ack") end)
 c:unsubscribe("test", 0)
 c:unsubscribe("test1", 1)
 
+-- publish, sync and asyc
 c:on("puback", function () print("lua recv publish ack") end)
 c:on("publish", function () print("lua process publish") end)
 c:publish("test2", "a publish example") -- qos=0, async publish

@@ -1,6 +1,7 @@
 #ifndef USOCKET_H
 #define USOCKET_H
 #include "tuya_iot_config.h"
+
 /*=========================================================================*\
 * Socket compatibilization module for Unix
 * LuaSocket toolkit
@@ -34,7 +35,7 @@
 #include <net/if.h>
 
 #elif defined(LWIP_STACK)
-#include "lwip/err.h"
+// #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
 #include "lwip/netdb.h"

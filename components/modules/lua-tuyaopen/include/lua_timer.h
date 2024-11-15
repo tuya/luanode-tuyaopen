@@ -11,24 +11,14 @@
 
 typedef struct
 {
-    void* os_timer;
-    size_t id;
+    TIMER_ID os_timer;
     size_t timeout;
     size_t type;
-    TIMER_TYPE  repeat;
-    LUA_MSG_HANDLE func;
+
+    lua_State *L;
+    int func_ref;
+    int arg_ref;
 }LUA_TIMER_T;
-
-
-int lua_timer_start(LUA_TIMER_T* timer,BOOL_T new);
-
-int lua_timer_stop(LUA_TIMER_T* timer);
-
-int lua_timer_trigger(LUA_TIMER_T* timer);
-
-int lua_timer_delete(LUA_TIMER_T* timer);
-
-LUA_TIMER_T* lua_timer_get(int timer_id);
 
 #endif
 

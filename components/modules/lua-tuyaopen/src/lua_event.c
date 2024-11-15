@@ -3,9 +3,6 @@
 #include "lua.h"
 #include "lauxlib.h"
 #include "tkl_mutex.h"
-#if defined(ENABLE_CELLULAR) && (ENABLE_CELLULAR==1)
-#include "tuya_cellular.h"
-#endif
 #include "lua_msgbus.h"
 typedef struct {
     lua_State *L;

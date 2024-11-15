@@ -229,144 +229,6 @@ static int l_system_get_random(lua_State *L)
     return 1;
 }
 
-
-//------------------------------------------------------------------
-static int l_timer_handler(lua_State *L, void* ptr) {
-    TUYA_RTOS_MSG_T* msg = (TUYA_RTOS_MSG_T*)lua_topointer(L, -1);
-    LUA_TIMER_T *timer = (LUA_TIMER_T *)ptr;
-    int timer_id = msg->arg1;
-    if (timer_id > 0) {
-        timer = lua_timer_get(timer_id);
-    }
-    else if (timer != NULL) {
-        timer_id = timer->id;
-        timer = lua_timer_get(timer_id);
-    }
-    if (timer == NULL)
-        return 0;
-
-    lua_pushinteger(L, MSG_TIMER);
-    lua_pushinteger(L, timer->id);
-    lua_pushinteger(L, timer->repeat);
-
-    if (timer->repeat == 0) {
-        if (lua_timer_stop(timer) == OPRT_OK) {
-            if (lua_timer_delete(timer) == OPRT_OK) {
-                tkl_system_free(timer);
-            }
-        }
-    }
-    return 3;
-}
-/*
-启动一个定时器
-@api    rtos.timer_start(id,timeout,_repeat)
-@int  定时器id
-@int  超时时长,单位毫秒
-@int  重复次数,默认是0
-@return id 如果是定时器消息,会返回定时器消息id及附加信息, 其他消息由底层决定,不向lua层进行任何保证.
-@usage
--- 用户代码请使用 sys.timerStart
--- 启动一个3秒的循环定时器
-rtos.timer_start(10000, 3000, 1)
-*/
-static int l_system_timer_start(lua_State *L) {
-
-
-    BOOL_T new_timer = FALSE;
-    lua_gettop(L);
-    size_t timeout = 0;
-    size_t type = 0;
-    size_t id = (size_t)luaL_checkinteger(L, 1);
-
-    timeout = (size_t)luaL_checkinteger(L, 2);
-    int repeat = (size_t)luaL_optinteger(L, 3, 0);
-
-    if (timeout < 1) {
-        lua_pushinteger(L, 0);
-        return 1;
-    }
-
-
-    LUA_TIMER_T *timer = lua_timer_get(id);
-    if (timer == NULL) {
-        timer = (LUA_TIMER_T*)tkl_system_malloc(sizeof(LUA_TIMER_T));
-        timer->id = id;
-        timer->timeout = timeout;
-        timer->repeat = repeat;
-        timer->func = &l_timer_handler;
-        timer->type = type;
-        new_timer = TRUE;
-    }
-
-    int re = lua_timer_start(timer,new_timer);
-    if (re == 0) {
-        lua_pushinteger(L, 1);
-    }
-    else {
-        PR_DEBUG("start timer fail, free timer %p", timer);
-        tkl_system_free(timer);
-        lua_pushinteger(L, 0);
-    }
-    return 1;
-}
-
-/*
-关闭并释放一个定时器
-@api    rtos.timer_stop(id)
-@int  定时器id
-@return nil            无返回值
-@usage
--- 用户代码请使用sys.timerStop
-rtos.timer_stop(id)
-*/
-static int l_system_timer_stop(lua_State *L)
-{
-    int timerid = -1;
-    LUA_TIMER_T *timer = NULL;
-    if (!lua_isinteger(L, 1)) {
-        return 0;
-    }
-    timerid = lua_tointeger(L, 1);
-    timer = lua_timer_get(timerid);
-    if (timer != NULL) {
-        // LLOGD("timer stop, free timer %d", timerid);
-        lua_timer_stop(timer);
-    }
-    return 0;
-}
-
-static int l_system_timer_trigger(lua_State *L)
-{
-    int timerid = -1;
-    LUA_TIMER_T *timer = NULL;
-    if (!lua_isinteger(L, 1)) {
-        return 0;
-    }
-    timerid = lua_tointeger(L, 1);
-    timer = lua_timer_get(timerid);
-    if (timer != NULL) {
-        lua_timer_trigger(timer);
-    }
-    return 0;
-}
-static int l_system_timer_delete(lua_State *L)
-{
-    int timerid = -1;
-    LUA_TIMER_T *timer = NULL;
-    if (!lua_isinteger(L, 1)) {
-        return 0;
-    }
-    timerid = lua_tointeger(L, 1);
-    timer = lua_timer_get(timerid);
-    if (timer != NULL) {
-        if (lua_timer_delete(timer) == OPRT_OK) {
-            tkl_system_free(timer);
-        }
-    }
-    return 0;
-}
-
 #include "tal_sleep.h"
 static int l_system_lpg(lua_State *L)
 {
@@ -406,21 +268,22 @@ static int l_system_time_get(lua_State *L)
 #include "rotable2.h"
 static const rotable_Reg_t reg_system[] =
 {
-    { "timer_start" ,      ROREG_FUNC(l_system_timer_start)},
-    { "timer_stop",        ROREG_FUNC(l_system_timer_stop)},
-    { "timer_trigger",        ROREG_FUNC(l_system_timer_trigger)},
-    { "timer_delete",        ROREG_FUNC(l_system_timer_delete)},
-    { "msg_recv",       ROREG_FUNC(l_system_receive_msg)},
+    // { "timer_start" ,      ROREG_FUNC(l_system_timer_start)},
+    // { "timer_stop",        ROREG_FUNC(l_system_timer_stop)},
+    // { "timer_trigger",        ROREG_FUNC(l_system_timer_trigger)},
+    // { "timer_delete",        ROREG_FUNC(l_system_timer_delete)},
+    // { "msg_recv",       ROREG_FUNC(l_system_receive_msg)},
     { "reset",            ROREG_FUNC(l_system_reboot)},
-    { "poweron_reason",    ROREG_FUNC(l_system_poweron_reason)},
-    { "buildDate",         ROREG_FUNC(l_system_build_date)},
-    { "setPaths",          ROREG_FUNC(l_system_set_paths)},
+    { "reset_reason",    ROREG_FUNC(l_system_poweron_reason)},
+    // { "buildDate",         ROREG_FUNC(l_system_build_date)},
+    // { "setPaths",          ROREG_FUNC(l_system_set_paths)},
     { "sleep_ms",          ROREG_FUNC(l_system_sleep_ms)},
-    { "get_sys_ms",         ROREG_FUNC(l_system_get_sys_ms)},
+    { "delay_ms",          ROREG_FUNC(l_system_sleep_ms)},
+    // { "get_sys_ms",         ROREG_FUNC(l_system_get_sys_ms)},
     { "log",                ROREG_FUNC(l_system_logout)},
-    { "get_random",         ROREG_FUNC(l_system_get_random)},
-    { "lp_mode",          ROREG_FUNC(l_system_lpg)},
-    { "time_get",           ROREG_FUNC(l_system_time_get)},
+    { "random",         ROREG_FUNC(l_system_get_random)},
+    // { "lp_mode",          ROREG_FUNC(l_system_lpg)},
+    { "now",           ROREG_FUNC(l_system_time_get)},
     { "heap",         ROREG_FUNC(l_system_free_heap)},
     { "info",         ROREG_FUNC(l_system_info)},
     { "INF_TIMEOUT",       ROREG_INT(-1)},

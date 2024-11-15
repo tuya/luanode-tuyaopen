@@ -3,122 +3,137 @@
 #include "lua_timer.h"
 #include "lua_msgbus.h"
 #include "tal_log.h"
+#include "tal_api.h"
 
-#define TKL_TIMER_COUNT 32
-static LUA_TIMER_T* timers[TKL_TIMER_COUNT] = {0};
+#define TIMER_MT "timer"
 
-
-static LUA_TIMER_T* lua_timer_get_with_os_timerid(TIMER_ID timer_id)
+static int __timer_callback(TIMER_ID os_timer, void *arg)
 {
-    for (size_t i = 0; i < TKL_TIMER_COUNT; i++)
-    {
-        if (timers[i] && timers[i]->os_timer == timer_id) {
-            return timers[i];
+    LUA_TIMER_T *timer = (LUA_TIMER_T*)arg;
+
+    lua_State *L = timer->L;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, timer->func_ref);
+    if (timer->arg_ref != LUA_NOREF) {
+        lua_rawgeti(L, LUA_REGISTRYINDEX, timer->arg_ref);
+        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+            lua_pop(L, 1);
         }
-    }
-    return NULL;
-}
-
-LUA_TIMER_T* lua_timer_get(int timer_id)
-{
-    for (size_t i = 0; i < TKL_TIMER_COUNT; i++)
-    {
-        if (timers[i] && timers[i]->id == timer_id) {
-            return timers[i];
-        }
-    }
-    return NULL;
-}
-
-static void lua_timer_callback(TIMER_ID os_timer, void *arg)
-{
-    //LLOGD("timer callback");
-    TUYA_RTOS_MSG_T msg;
-    LUA_TIMER_T *timer = lua_timer_get_with_os_timerid(os_timer);
-    msg.handler = timer->func;
-    msg.ptr = timer;
-    msg.arg1 = timer->id;
-    msg.arg2 = 0;
-    lua_msgbus_put(&msg, 0);
-}
-
-static int nextTimerSlot()
-{
-    for (size_t i = 0; i < TKL_TIMER_COUNT; i++) {
-        if (timers[i] == NULL) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int lua_timer_start(LUA_TIMER_T* timer,BOOL_T new)
-{
-    TIMER_ID os_timer = NULL;
-    int timerIndex;
-
-    if (new) {
-        timerIndex = nextTimerSlot();
-        if (timerIndex < 0) {
-            PR_ERR("too many timers");
-            return 1; // too many timer!!
-        }
-        tal_sw_timer_create(lua_timer_callback,NULL,&os_timer);
-        if (!os_timer) {
-            PR_ERR("tal_sw_timer_create FAIL");
-            return -1;
-        }
-        timers[timerIndex] = timer;
-
-        timer->os_timer = os_timer;
-    }
-    else {
-        os_timer = lua_timer_get(timer->id);
-    }
-
-
-    int re = tal_sw_timer_start(os_timer,timer->timeout,timer->repeat);
-    if (re != OPRT_OK) {
-        PR_ERR("tal_sw_timer_start FAIL");
-    }
-    return re == OPRT_OK ? 0 : -1;
-}
-
-int lua_timer_stop(LUA_TIMER_T* timer)
-{
-    if (timer == NULL || timer->os_timer == NULL)
-        return -1;
-
-
-    int ret = tal_sw_timer_stop(timer->os_timer);
-    if (ret == OPRT_OK) {
-        timer->os_timer = NULL;
-    }
-    return 0;
-}
-
-int lua_timer_delete(LUA_TIMER_T* timer)
-{
-    int ret = tal_sw_timer_delete(timer->os_timer);
-    if (ret == OPRT_OK) {
-        for (size_t i = 0; i < TKL_TIMER_COUNT; i++) {
-            if (timers[i] == timer) {
-                timers[i] = NULL;
-                break;
-            }
+    } else {
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+            lua_pop(L, 1);
         }
     }
 
-    return ret;
+    return OPRT_OK;
 }
 
-int lua_timer_trigger(LUA_TIMER_T* timer)
+int lua_timer_stop(lua_State *L)
 {
-    if (timer == NULL || timer->os_timer == NULL)
+    LUA_TIMER_T *timer = luaL_checkudata(L, 1, TIMER_MT);
+
+    if (OPRT_OK != tal_sw_timer_stop(timer->os_timer)) {
+        lua_pushboolean(L, 0);
+    } else {
+        lua_pushboolean(L, 1);
+    }
+    return 1;
+}
+
+int lua_timer_delete(lua_State *L)
+{
+    LUA_TIMER_T *timer = luaL_checkudata(L, 1, TIMER_MT);
+
+    if (OPRT_OK != tal_sw_timer_delete(timer->os_timer)) {
+        lua_pushboolean(L, 0);
         return 1;
+    }
 
-    tal_sw_timer_trigger(timer->os_timer);
+    // release ref
+    luaL_unref(L, LUA_REGISTRYINDEX, timer->func_ref);
+    if (timer->arg_ref != LUA_NOREF) 
+        luaL_unref(L, LUA_REGISTRYINDEX, timer->arg_ref);
+
+    lua_pushboolean(L, 1);    
+    return 1;
+}
+
+int lua_timer_trigger(lua_State *L)
+{
+    LUA_TIMER_T *timer = luaL_checkudata(L, 1, TIMER_MT);
+
+    if (OPRT_OK != tal_sw_timer_trigger(timer->os_timer)) {
+        lua_pushboolean(L, 0);
+    } else {
+        lua_pushboolean(L, 1);
+    }
+
     return 0;
 }
 
+static int lua_timer_new(lua_State *L) 
+{
+    tal_sw_timer_init();
 
+    int timeout = luaL_checkinteger(L, 1);  // timeout in ms
+    int type = luaL_checkinteger(L, 2);
+
+    // function
+    luaL_checktype(L, 3, LUA_TFUNCTION);
+    lua_pushvalue(L, 3);
+    int func_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    // argument support nil
+    int arg_ref = LUA_NOREF;
+    if (!lua_isnoneornil(L, 4)) {
+        lua_pushvalue(L, 4);
+        arg_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    LUA_TIMER_T *timer = (LUA_TIMER_T *)lua_newuserdata(L, sizeof(LUA_TIMER_T));
+    if (!timer) {
+        luaL_unref(L, LUA_REGISTRYINDEX, func_ref);
+        if (arg_ref != LUA_NOREF) 
+            luaL_unref(L, LUA_REGISTRYINDEX, arg_ref);
+
+        lua_pushnil(L);
+        return 1;        
+    }
+    memset(timer, 0, sizeof(LUA_TIMER_T));
+    timer->timeout = timeout;
+    timer->type = type;
+    timer->func_ref = func_ref;
+    timer->arg_ref = arg_ref;
+    timer->L = L;
+    tal_sw_timer_create(__timer_callback, timer, &timer->os_timer);
+    if (OPRT_OK != tal_sw_timer_start(timer->os_timer, timer->timeout, timer->type)) {
+        tal_sw_timer_delete(timer->os_timer);
+        tal_free(timer);
+        lua_pushnil(L);
+        return 1;
+    }
+
+    // return timer
+	luaL_getmetatable(L, TIMER_MT);
+	lua_setmetatable(L, -2);
+    // lua_pushlightuserdata(L, timer);
+    return 1;
+}
+
+#include "rotable2.h"
+static const rotable_Reg_t reg_timer[] = {
+    {"start",                           ROREG_FUNC(lua_timer_new)},
+    {"trigger",                         ROREG_FUNC(lua_timer_trigger)},
+    {"stop",                            ROREG_FUNC(lua_timer_stop)},
+    {"delete",                          ROREG_FUNC(lua_timer_delete)},
+    {"ONCE",                            ROREG_INT(TAL_TIMER_ONCE)},
+    {"CYCLE",                           ROREG_INT(TAL_TIMER_CYCLE)},
+    { NULL,                             ROREG_INT(0) }
+};
+
+int luaopen_timer(lua_State *L)
+{
+    luaL_newmetatable(L, TIMER_MT);
+
+    luaL_newlib2(L, reg_timer);
+    return 1;
+}

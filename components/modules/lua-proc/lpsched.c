@@ -6,7 +6,7 @@
 #include "tal_mutex.h"
 #include "tal_semaphore.h"
 #include "tal_log.h"
-#include "tkl_thread.h"
+#include "tal_thread.h"
 #include "tal_memory.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +34,7 @@
 
 
 typedef struct {
-    TKL_THREAD_HANDLE thread;
+    THREAD_HANDLE thread;
     SEM_HANDLE    exit_sem;
 }ThreadInfo_t,*PThreadInfo_t;
 /********************
@@ -162,11 +162,11 @@ void workermain( void *args ) {
   luaproc *lp;
   int procstat;
   PThreadInfo_t pthread_info = (PThreadInfo_t)args;
-  TKL_THREAD_HANDLE thread_id;
-  tkl_thread_get_id(&thread_id);
-  if ( pthread_info) {
-    pthread_info->thread = pthread_info->thread ;
-  }
+  // THREAD_HANDLE thread_id;
+  // tkl_thread_get_id(&thread_id);
+  // if ( pthread_info) {
+  //   pthread_info->thread = pthread_info->thread ;
+  // }
 
   /* main worker loop */
   while ( TRUE ) {
@@ -189,7 +189,7 @@ void workermain( void *args ) {
       /* remove worker from workers table */
       lua_getglobal( workerls, LUAPROC_SCHED_WORKERS_TABLE );
 
-      lua_pushlightuserdata( workerls, (void *)thread_id);
+      lua_pushlightuserdata( workerls, (void *)pthread_info->thread);
       lua_pushnil( workerls );
       lua_rawset( workerls, -3 );
       lua_pop( workerls, 1 );
@@ -197,7 +197,7 @@ void workermain( void *args ) {
       tal_semaphore_post( cond_wakeup_worker );  /* wake other workers up */
       tal_mutex_unlock( mutex_sched );
       tal_semaphore_post(pthread_info->exit_sem);
-      tkl_thread_release( thread_id );  /* destroy itself */
+      tal_thread_delete( pthread_info->thread );  /* destroy itself */
       // 防止任务没有自杀
       return;
     }
@@ -311,7 +311,9 @@ int sched_init( void ) {
         lua_pop( workerls, 1 ); /* pop workers table from stack */
         return LUAPROC_SCHED_PTHREAD_ERROR;
     }
-    if ( tkl_thread_create(&workinfo->thread,"worker",thread_stack_size,5,workermain,workinfo) != 0 ) {
+
+    THREAD_CFG_T cfg = {.priority=5, .stackDepth=thread_stack_size, .thrdname="worker"};
+    if ( tal_thread_create_and_start(&workinfo->thread,NULL,NULL,workermain,workinfo, &cfg) != 0 ) {
       lua_pop( workerls, 1 ); /* pop workers table from stack */
       sched_del_worker_info(workinfo);
       return LUAPROC_SCHED_PTHREAD_ERROR;
@@ -358,11 +360,13 @@ int sched_set_numworkers( int numworkers ) {
             lua_pop( workerls, 1 ); /* pop workers table from stack */
             return LUAPROC_SCHED_PTHREAD_ERROR;
         }
-      if ( tkl_thread_create(&workinfo->thread,"worker",thread_stack_size,5,workermain,workinfo) != 0 ) {
-        tal_mutex_unlock( mutex_sched );
-        lua_pop( workerls, 1 ); /* pop workers table from stack */
-        return LUAPROC_SCHED_PTHREAD_ERROR;
-      }
+
+        THREAD_CFG_T cfg = {.priority=5, .stackDepth=thread_stack_size, .thrdname="worker"};
+        if ( tal_thread_create_and_start(&workinfo->thread,NULL,NULL,workermain,workinfo, &cfg) != 0 ) {
+          tal_mutex_unlock( mutex_sched );
+          lua_pop( workerls, 1 ); /* pop workers table from stack */
+          return LUAPROC_SCHED_PTHREAD_ERROR;
+        }
 
       /* store worker thread id in a table */
       lua_pushlightuserdata( workerls, (void *)workinfo );
@@ -377,6 +381,7 @@ int sched_set_numworkers( int numworkers ) {
   /* destroy existing workers */
   else if ( numworkers < workerscount ) {
     destroyworkers = destroyworkers + numworkers;
+    tal_semaphore_post(cond_wakeup_worker );
   }
 
   tal_mutex_unlock( mutex_sched );

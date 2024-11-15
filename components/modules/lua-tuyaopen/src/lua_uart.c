@@ -34,22 +34,14 @@ static int l_uart_setup(lua_State *L)
     if (port_id >= MAX_UART_PORTS) {
         luaL_error(L, "Invalid port_id");
     }
-    lua_Number stop_bits = luaL_optnumber(L, 4, TUYA_UART_STOP_LEN_1BIT);
 
     TUYA_UART_BASE_CFG_T uart_config = {
         .baudrate = luaL_optinteger(L, 2, 115200),
         .databits = luaL_optinteger(L, 3, TUYA_UART_DATA_LEN_8BIT),
-        .parity = luaL_optinteger(L, 5, TUYA_UART_PARITY_TYPE_NONE),
+        .parity = luaL_optinteger(L, 4, TUYA_UART_PARITY_TYPE_NONE),
+        .stopbits = luaL_optinteger(L, 5, TUYA_UART_STOP_LEN_1BIT),
         .flowctrl = luaL_optinteger(L, 6, TUYA_UART_FLOWCTRL_NONE),
     };
-    if(stop_bits == 1)
-        uart_config.stopbits = TUYA_UART_STOP_LEN_1BIT;
-    else if(stop_bits == 1.5)
-        uart_config.stopbits = TUYA_UART_STOP_LEN_1_5BIT1;
-    else if(stop_bits == 2)
-        uart_config.stopbits = TUYA_UART_STOP_LEN_2BIT;
-    else
-        uart_config.stopbits = (uint8_t)TUYA_UART_STOP_LEN_1BIT;
 
     int result = tkl_uart_init(port_id,&uart_config);
     lua_pushinteger(L, result);
@@ -338,12 +330,26 @@ static const rotable_Reg_t uart[] = {
     {"set_rx_irq",      ROREG_FUNC(l_uart_rx_irq_cb_reg)},
     {"wait_rx",         ROREG_FUNC(l_uart_wait_rx_size)},
     {"ioctl",           ROREG_FUNC(l_uart_ioctl)},
+    {"UART_0",          ROREG_INT(TUYA_UART_NUM_0)},
+    {"UART_1",          ROREG_INT(TUYA_UART_NUM_1)},
+    {"UART_2",          ROREG_INT(TUYA_UART_NUM_2)},
+    {"DATA_5_BITS",     ROREG_INT(TUYA_UART_DATA_LEN_5BIT)},
+    {"DATA_6_BITS",     ROREG_INT(TUYA_UART_DATA_LEN_6BIT)},
+    {"DATA_7_BITS",     ROREG_INT(TUYA_UART_DATA_LEN_7BIT)},
+    {"DATA_8_BITS",     ROREG_INT(TUYA_UART_DATA_LEN_8BIT)},
+    {"PARITY_NONE",     ROREG_INT(TUYA_UART_PARITY_TYPE_NONE)},
+    {"PARITY_ODD",      ROREG_INT(TUYA_UART_PARITY_TYPE_ODD)},
+    {"PARITY_EVEN",     ROREG_INT(TUYA_UART_PARITY_TYPE_EVEN)},
+    {"STOPBITS_1",      ROREG_INT(TUYA_UART_STOP_LEN_1BIT)},
+    {"STOPBITS_1_5",    ROREG_INT(TUYA_UART_STOP_LEN_1_5BIT1)},
+    {"STOPBITS_2",      ROREG_INT(TUYA_UART_STOP_LEN_2BIT)},
+    {"FLOWCTRL_NONE",   ROREG_INT(TUYA_UART_FLOWCTRL_NONE)},
+    {"FLOWCTRL_RTSCTS", ROREG_INT(TUYA_UART_FLOWCTRL_RTSCTS)},
+    {"FLOWCTRL_XONXOFF",ROREG_INT(TUYA_UART_FLOWCTRL_XONXOFF)},
+    {"FLOWCTRL_DTRDSR", ROREG_INT(TUYA_UART_FLOWCTRL_DTRDSR)},
     {"SUSPEND",         ROREG_INT(TUYA_UART_SUSPEND_CMD)},
     {"FLUSH",           ROREG_INT(TUYA_UART_FLUSH_CMD)},
     {"RECONFIG",        ROREG_INT(TUYA_UART_RECONFIG_CMD)},
-    {"NONE",            ROREG_INT(TUYA_UART_PARITY_TYPE_NONE)},
-    {"ODD",             ROREG_INT(TUYA_UART_PARITY_TYPE_ODD)},
-    {"EVEN",            ROREG_INT(TUYA_UART_PARITY_TYPE_EVEN)},
     {NULL, ROREG_INT(0)}
 };
 

@@ -1,9 +1,9 @@
 
-## ¿ìËÙÌåÑé
+## å¿«é€Ÿä½“éªŒ
 
-#### °²×°ÒÀÀµ
+#### å®‰è£…ä¾èµ–
 
-°²×°ubuntuÏµÍ³£¬ÍÆ¼ö20.04°æ±¾
+å®‰è£…ubuntuç³»ç»Ÿï¼Œæ¨è20.04ç‰ˆæœ¬
 
 ```
 $ sudo apt-get install lcov cmake-curses-gui build-essential wget git python3 python3-pip python3-venv libc6-i386 libsystemd-dev
@@ -11,7 +11,7 @@ $ sudo apt-get install lcov cmake-curses-gui build-essential wget git python3 py
 
 
 
-#### ¿ËÂ¡²Ö¿â
+#### å…‹éš†ä»“åº“
 
 ```
 $ git clone https://github.com/tuya/luanode-tuyaopen.git
@@ -20,29 +20,29 @@ $ git submodule update --init
 
 
 
-#### ÉèÖÃ»·¾³±äÁ¿
+#### è®¾ç½®ç¯å¢ƒå˜é‡
 
 ```
 $ cd tuyaopen
 $ export PATH=$PATH:$PWD
 ```
 
-»ò½« [tuyaopen](https://github.com/tuya/tuyaopen) Â·¾¶Ìí¼Óµ½ÏµÍ³»·¾³±äÁ¿ÖĞ¡£ [tuyaopen](https://github.com/tuya/tuyaopen)  Í¨¹ı  [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) ÃüÁî½øĞĞ±àÒë¡¢µ÷ÊÔµÈ²Ù×÷£¬ [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) ÃüÁî»á¸ù¾İ»·¾³±äÁ¿ÖĞÉèÖÃµÄÂ·¾¶²éÕÒ  [tuyaopen](https://github.com/tuya/tuyaopen)  ²Ö¿â£¬²¢Ö´ĞĞ¶ÔÓ¦²Ù×÷¡£
+æˆ–å°† [tuyaopen](https://github.com/tuya/tuyaopen) è·¯å¾„æ·»åŠ åˆ°ç³»ç»Ÿç¯å¢ƒå˜é‡ä¸­ã€‚ [tuyaopen](https://github.com/tuya/tuyaopen)  é€šè¿‡  [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) å‘½ä»¤è¿›è¡Œç¼–è¯‘ã€è°ƒè¯•ç­‰æ“ä½œï¼Œ [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) å‘½ä»¤ä¼šæ ¹æ®ç¯å¢ƒå˜é‡ä¸­è®¾ç½®çš„è·¯å¾„æŸ¥æ‰¾  [tuyaopen](https://github.com/tuya/tuyaopen)  ä»“åº“ï¼Œå¹¶æ‰§è¡Œå¯¹åº”æ“ä½œã€‚
 
- [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) ÃüÁîµÄÏêÏ¸Ê¹ÓÃ·½·¨£¬Çë²Î¿¼ [tos ÃüÁî](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md)¡£
+ [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) å‘½ä»¤çš„è¯¦ç»†ä½¿ç”¨æ–¹æ³•ï¼Œè¯·å‚è€ƒ [tos å‘½ä»¤](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md)ã€‚
 
 
 
-#### ±àÒë»ù´¡¹Ì¼ş
+#### ç¼–è¯‘åŸºç¡€å›ºä»¶
 
-Ê¹ÓÃ [Lua](https://github.com/lua/lua) ¿ª·¢ĞèÒªÒ»¸ö»ù´¡¹Ì¼ş£¬¸Ã»ù´¡¹Ì¼şÌá¹©ÁË [tuyaopen](https://github.com/tuya/tuyaopen) »ù´¡ÄÜÁ¦ÒÔ¼°  [Lua](https://github.com/lua/lua) ÒıÇæÄÜÁ¦£¬ÎÒÃÇĞèÒªÔÚ¹¤³ÌÄÚ²¿½«Æä±àÒë²¢ÉÕÂ¼µ½Ä¿±ê°åÉÏ¡£
+ä½¿ç”¨ [Lua](https://github.com/lua/lua) å¼€å‘éœ€è¦ä¸€ä¸ªåŸºç¡€å›ºä»¶ï¼Œè¯¥åŸºç¡€å›ºä»¶æä¾›äº† [tuyaopen](https://github.com/tuya/tuyaopen) åŸºç¡€èƒ½åŠ›ä»¥åŠ  [Lua](https://github.com/lua/lua) å¼•æ“èƒ½åŠ›ï¼Œæˆ‘ä»¬éœ€è¦åœ¨å·¥ç¨‹å†…éƒ¨å°†å…¶ç¼–è¯‘å¹¶çƒ§å½•åˆ°ç›®æ ‡æ¿ä¸Šã€‚
 
 ```shell
 $ cd mian
 $ tos build
 ```
 
-±àÒëÍê³ÉÖ®ºó¹Ì¼şÎ»ÓÚ´ËÄ¿Â¼Ö®ÏÂ£¬Í¨¹ı [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) ÃüÁî½øĞĞÉÕÂ¼¡£
+ç¼–è¯‘å®Œæˆä¹‹åå›ºä»¶ä½äºæ­¤ç›®å½•ä¹‹ä¸‹ï¼Œé€šè¿‡ [tos ](https://github.com/tuya/tuyaopen/blob/master/docs/zh/tos_guide.md) å‘½ä»¤è¿›è¡Œçƒ§å½•ã€‚
 
 ```shell
 $ cd .build/main/bin/
@@ -50,9 +50,9 @@ $ ls
 -rwxrwxr-x  1 tuyaos tuyaos 4977400 Nov  5 13:35 main_1.0.0*
 ```
 
-##### ĞŞ¸ÄÄ¿±ê°å
+##### ä¿®æ”¹ç›®æ ‡æ¿
 
-Èç¹ûĞèÒªĞŞ¸ÄÄ¿±ê°å£¬ĞèÒªĞŞ¸Ä¹¤³ÌÄ¿Â¼µÄ `project_build.ini` ÎÄ¼ş£¬Ä¿Ç°Ö§³ÖµÄÄ¿±ê°åÓĞ`ubuntu`¡¢`t1`¡¢`t2`¡¢ `t3`¡¢ `t5`¡£ĞŞ¸ÄÍê³ÉÖ®ºó£¬ĞèÒªÉ¾³ı`.build`Ä¿Â¼£¬ÖØĞÂ±àÒë¼´¿É¡£
+å¦‚æœéœ€è¦ä¿®æ”¹ç›®æ ‡æ¿ï¼Œéœ€è¦ä¿®æ”¹å·¥ç¨‹ç›®å½•çš„ `project_build.ini` æ–‡ä»¶ï¼Œç›®å‰æ”¯æŒçš„ç›®æ ‡æ¿æœ‰`ubuntu`ã€`t1`ã€`t2`ã€ `t3`ã€ `t5`ã€‚ä¿®æ”¹å®Œæˆä¹‹åï¼Œéœ€è¦åˆ é™¤`.build`ç›®å½•ï¼Œé‡æ–°ç¼–è¯‘å³å¯ã€‚
 
 ```ini
 [project:main]
@@ -61,9 +61,9 @@ platform = ubuntu
 
 
 
-#### ¿ìËÙÌåÑé
+#### å¿«é€Ÿä½“éªŒ
 
-¹Ì¼şÉÕÂ¼Íê³ÉÖ®ºó£¬ÖØĞÂÆô¶¯¼´¿É½øÈë [Lua](https://github.com/lua/lua) »ù´¡¹Ì¼şÄ£Ê½¡£ÔÚ`ubuntu` Ä¿±ê°å£¬¿ÉÒÔÍ¨¹ı`stdin/stdout` ½øĞĞÊäÈëÊä³ö£¬Ö±½Ó½ÓÊÜ [Lua](https://github.com/lua/lua) Ö¸Áî£»ÔÚÆäËûÄ¿±ê°åÉÏ£¬¿ÉÒÔÍ¨¹ı´®¿Ú¹¤¾ß£¬Á¬½Ó´®¿Ú0½øĞĞÊäÈëÊä³öÖ±½Ó½ÓÊÜ [Lua](https://github.com/lua/lua) Ö¸Áî¡£
+å›ºä»¶çƒ§å½•å®Œæˆä¹‹åï¼Œé‡æ–°å¯åŠ¨å³å¯è¿›å…¥ [Lua](https://github.com/lua/lua) åŸºç¡€å›ºä»¶æ¨¡å¼ã€‚åœ¨`ubuntu` ç›®æ ‡æ¿ï¼Œå¯ä»¥é€šè¿‡`stdin/stdout` è¿›è¡Œè¾“å…¥è¾“å‡ºï¼Œç›´æ¥æ¥å— [Lua](https://github.com/lua/lua) æŒ‡ä»¤ï¼›åœ¨å…¶ä»–ç›®æ ‡æ¿ä¸Šï¼Œå¯ä»¥é€šè¿‡ä¸²å£å·¥å…·ï¼Œè¿æ¥ä¸²å£0è¿›è¡Œè¾“å…¥è¾“å‡ºç›´æ¥æ¥å— [Lua](https://github.com/lua/lua) æŒ‡ä»¤ã€‚
 
 ```shell
 [MEM DBG] heap init-------size:524288 addr:0x7ff04ca7f800---------
@@ -78,9 +78,9 @@ hello world
 
 
 
-## ±àĞ´´úÂë
+## ç¼–å†™ä»£ç 
 
-luanode-tuyaopenµÄ±àÂëÖ»Ö§³Ö [Lua](https://github.com/lua/lua) ÓïÑÔ¡£ÒÔÏÂÊÇÒ»¸ö¼òµ¥µÄÊ¾Àı£º
+luanode-tuyaopençš„ç¼–ç åªæ”¯æŒ [Lua](https://github.com/lua/lua) è¯­è¨€ã€‚ä»¥ä¸‹æ˜¯ä¸€ä¸ªç®€å•çš„ç¤ºä¾‹ï¼š
 
 ```lua
 -- simple mqtt client
@@ -90,13 +90,13 @@ c:on("disconack", function () print("lua recv dis-connect ack") end)
 c:connect({host="broker.emqx.io", port=1883, client_id="tuyaopen-01", user_name="emqx", passwd="public"})
 ```
 
-¸ü¶àÊ¾ÀıÇë²Î¿¼ÏîÄ¿`/lua_examples/`ÎÄ¼ş¼ĞÖĞµÄÊ¾Àı¡£
+æ›´å¤šç¤ºä¾‹è¯·å‚è€ƒé¡¹ç›®`/lua_examples/`æ–‡ä»¶å¤¹ä¸­çš„ç¤ºä¾‹ã€‚
 
 
 
-## Nodemcu-uploader¹¤¾ß
+## Nodemcu-uploaderå·¥å…·
 
-Ö§³Ö[nodemcu-uploader](https://github.com/kmpm/nodemcu-uploader)¹¤¾ß£¬²¢½øĞĞÁËÒ»Ğ©¸öĞÔ»¯µÄÊÊÅäĞŞ¸Ä¡£Ö§³ÖÍ¨¹ı´®¿ÚÁ¬½ÓÄ¿±ê°å£¬°ïÖú¿ª·¢ÕßÔÚ¿ª·¢¹ı³ÌÖĞ½øĞĞÎÄ¼şÉÏ´«¡¢ÏÂÔØ¡¢±¸·İ£»Ò²Ö§³ÖÖ±½ÓÔÚ±¾µØ¡¢Ä¿±ê°åÉÏÔËĞĞÎÄ¼ş£»Í¬Ê±Ö§³Ö¶Ô»ñÈ¡Ä¿±ê°å»ù´¡¹Ì¼şĞÅÏ¢¡¢×ÊÔ´ĞÅÏ¢µÈ¡£
+æ”¯æŒ[nodemcu-uploader](https://github.com/kmpm/nodemcu-uploader)å·¥å…·ï¼Œå¹¶è¿›è¡Œäº†ä¸€äº›ä¸ªæ€§åŒ–çš„é€‚é…ä¿®æ”¹ã€‚æ”¯æŒé€šè¿‡ä¸²å£è¿æ¥ç›®æ ‡æ¿ï¼Œå¸®åŠ©å¼€å‘è€…åœ¨å¼€å‘è¿‡ç¨‹ä¸­è¿›è¡Œæ–‡ä»¶ä¸Šä¼ ã€ä¸‹è½½ã€å¤‡ä»½ï¼›ä¹Ÿæ”¯æŒç›´æ¥åœ¨æœ¬åœ°ã€ç›®æ ‡æ¿ä¸Šè¿è¡Œæ–‡ä»¶ï¼›åŒæ—¶æ”¯æŒå¯¹è·å–ç›®æ ‡æ¿åŸºç¡€å›ºä»¶ä¿¡æ¯ã€èµ„æºä¿¡æ¯ç­‰ã€‚
 
 ```shell
 $ python3 nodemcu-uploader.py --help

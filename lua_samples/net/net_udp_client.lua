@@ -16,33 +16,29 @@ while true do
     -- get the linkstatus
     isup = conn.isup()
     if isup then
-        c = socket.tcp()
-        c:settimeout(0)
+        fd = socket.udp()
+        fd:settimeout(5)
 
-        -- connect to server
+        -- server info
         local serverAddress = "127.0.0.1"
         local serverPort = 6666
-        local success, err = c:connect(serverAddress, serverPort) 
-        if not success then
-            print("Failed to connect to server: " .. err)
-            break
-        end
+        local message = "Hello, UDP Server!"
 
         -- send message to server
-        local message = "Hello, Server!"
-        c:send(message .. "\n")    
+        fd:sendto(message, serverAddress, serverPort)
+        print("Message sent to " .. serverAddress .. ":" .. serverPort)
 
-        -- receive message from server
-        local response, err = c:receive()
-        if not err then
-            print("Received from server: " .. response)
+
+        local response, err = fd:receive()
+        if response then
+            print("Received response: " .. response)
         else
-            print("Failed to receive from server: " .. err)
+            print("Failed to receive response: " .. err)
         end
 
-        c:close()
+        fd:close()
     end
 
-    -- delay 1000ms waiting for connecting
-    sys.delay_ms(1000)
+    -- sleep 1000ms 
+    sys.sleep_ms(1000)
 end

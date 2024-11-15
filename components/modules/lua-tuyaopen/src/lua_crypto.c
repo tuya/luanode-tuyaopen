@@ -3,10 +3,12 @@
 #include "lualib.h"
 #include "lauxlib.h"
 #include "crc.h"
+#include "crc_16.h"
 #include "crc32i.h"
 #include "tal_security.h"
 #include "tal_memory.h"
 #include "mbedtls/md5.h"
+#include "mix_method.h"
 
 #define LUA_CRYPTO_TYPE "crypto"
 /**
@@ -26,18 +28,10 @@ local crc = crypto.crc16("")
  */
 static int l_crypto_crc16(lua_State *L)
 {
-    size_t inputlen;
-    const unsigned char *inputData;
-    const char  *inputmethod = (const char*)luaL_checkstring(L, 1);
+    size_t len;
+    char *data = luaL_checklstring(L, 1, &len);
 
-    inputData = (const unsigned char*)lua_tolstring(L,2,&inputlen);
-
-    uint16_t poly = luaL_optnumber(L,3,0x0000);
-    uint16_t initial = luaL_optnumber(L,4,0x0000);
-    uint16_t finally = luaL_optnumber(L,5,0x0000);
-    uint8_t inReverse = luaL_optnumber(L,6,0);
-    uint8_t outReverse = luaL_optnumber(L,7,0);
-    lua_pushinteger(L, calcCRC16(inputData, inputmethod,inputlen,poly,initial,finally,inReverse,outReverse));
+    lua_pushinteger(L, get_crc_16(data, len));
     return 1;
 }
 
@@ -335,6 +329,31 @@ static int l_crypto_sha256(lua_State *L) {
     return 0;
 }
 
+/**
+计算hmac_sha1值
+@api crypto.hmac_sha1(str, key)
+@string 需要计算的字符串
+@string 密钥
+@return string 计算得出的hmac_sha1值的hex字符串
+@usage
+-- 计算字符串"abc"的hmac_sha1
+log.info("hmac_sha1", crypto.hmac_sha256("abc", "1234567890"))
+ */
+static int l_crypto_hmac_sha256(lua_State *L) {
+    size_t str_size = 0;
+    size_t key_size = 0;
+    const char* str = luaL_checklstring(L, 1, &str_size);
+    const char* key = luaL_checklstring(L, 2, &key_size);
+    char tmp[64] = {0};
+    char dst[64] = {0};
+    if (tal_sha256_mac((const uint8_t *)key, key_size, (const uint8_t *)str, str_size, (uint8_t*)tmp) == 0) {
+        fixhex(tmp, dst, 32);
+        lua_pushlstring(L, dst, 64);
+        return 1;
+    }
+    return 0;
+}
+
 typedef struct
 {
     char tp[16];
@@ -435,6 +454,29 @@ static int l_crypt_hash_finish(lua_State *L) {
     lua_pushlstring(L, buff, ret * 2);
     return 1;
 }
+
+static int l_crypt_base64_encode(lua_State *L)
+{
+	size_t size;
+	const unsigned char *data = luaL_checklstring(L, 1, &size);
+
+    size_t encode_size = size / 3 * 4 + 5;
+	void *buf = lua_newuserdata(L, encode_size);
+	tuya_base64_encode(data, buf, size);    
+	lua_pushlstring(L, buf, encode_size);
+	return 1;    
+}
+
+static int l_crypt_base64_decode(lua_State *L)
+{
+	size_t size, decode_size;
+	const unsigned char *data = luaL_checklstring(L, 1, &size);
+	void *buf = lua_newuserdata(L, size);
+	decode_size = tuya_base64_decode(data, buf);    
+	lua_pushlstring(L, buf, decode_size);
+	return 1;  
+}
+
 #include "rotable2.h"
 static const rotable_Reg_t reg_crypto[] =
 {
@@ -443,15 +485,18 @@ static const rotable_Reg_t reg_crypto[] =
     { "sha256" ,        ROREG_FUNC(l_crypto_sha256         )},
     { "hmac_md5" ,      ROREG_FUNC(l_crypto_hmac_md5       )},
     { "hmac_sha1" ,     ROREG_FUNC(l_crypto_hmac_sha1      )},
+    { "hmac_sha256" ,   ROREG_FUNC(l_crypto_hmac_sha256    )},
     { "crc16",          ROREG_FUNC(l_crypto_crc16          )},
-    { "crc16_modbus",   ROREG_FUNC(l_crypto_crc16_modbus   )},
-    { "crc16_modbus_array",ROREG_FUNC(l_crypto_crc16_array_modbus)},
+    // { "crc16_modbus",   ROREG_FUNC(l_crypto_crc16_modbus   )},
+    // { "crc16_modbus_array",ROREG_FUNC(l_crypto_crc16_array_modbus)},
     { "crc32",          ROREG_FUNC(l_crypto_crc32          )},
     { "crc8",           ROREG_FUNC(l_crypto_crc8           )},
-    { "hash_init",      ROREG_FUNC(l_crypt_hash_init)},
-    { "hash_update",    ROREG_FUNC(l_crypt_hash_update)},
-    { "hash_finish",    ROREG_FUNC(l_crypt_hash_finish)},
+    // { "hash_init",      ROREG_FUNC(l_crypt_hash_init)},
+    // { "hash_update",    ROREG_FUNC(l_crypt_hash_update)},
+    // { "hash_finish",    ROREG_FUNC(l_crypt_hash_finish)},
 
+	{"base64_encode",   ROREG_FUNC(l_crypt_base64_encode)},
+	{"base64_decode",   ROREG_FUNC(l_crypt_base64_decode)},
 	{ NULL,             ROREG_INT(0) }
 };
 
