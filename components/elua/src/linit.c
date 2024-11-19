@@ -36,7 +36,7 @@
 LUAMOD_API int luaopen_uartlib(lua_State *L);
 #endif
 
-#if defined(ENABLE_GPUI)
+#if defined(ENABLE_GPIO)
 LUAMOD_API int luaopen_gpio_lib(lua_State *L);
 #endif
 

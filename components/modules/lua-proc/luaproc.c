@@ -176,7 +176,7 @@ void list_insert( list *l, luaproc *lp ) {
 }
 
 /* remove and return the first lua process in a (fifo) list */
-luaproc *list_remove( list *l ) {
+luaproc *__list_remove( list *l ) {
   if ( l->head != NULL ) {
     luaproc *lp = l->head;
     l->head = lp->next;
@@ -517,7 +517,7 @@ static int luaproc_recycle_set( lua_State *L ) {
 
   /* remove extra nodes and destroy each lua processes */
   while ( list_count( &recycle_list ) > recyclemax ) {
-    lp = list_remove( &recycle_list );
+    lp = __list_remove( &recycle_list );
     lua_close( lp->lstate );
   }
   /* release exclusive access to recycled lua processes list */
@@ -591,7 +591,7 @@ static int luaproc_create_newproc( lua_State *L ) {
 
   /* check if a lua process can be recycled */
   if ( recyclemax > 0 ) {
-    lp = list_remove( &recycle_list );
+    lp = __list_remove( &recycle_list );
     /* otherwise create a new lua process */
     if ( lp == NULL ) {
       lp = luaproc_new( L );
@@ -645,7 +645,7 @@ static int luaproc_send( lua_State *L ) {
   }
 
   /* remove first lua process, if any, from channel's receive list */
-  dstlp = list_remove( &chan->recv );
+  dstlp = __list_remove( &chan->recv );
 
   if ( dstlp != NULL ) { /* found a receiver? */
     /* try to move values between lua states' stacks */
@@ -714,7 +714,7 @@ static int luaproc_receive( lua_State *L ) {
   }
 
   /* remove first lua process, if any, from channels' send list */
-  srclp = list_remove( &chan->send );
+  srclp = __list_remove( &chan->send );
 
   if ( srclp != NULL ) {  /* found a sender? */
     /* try to move values between lua states' stacks */
@@ -862,7 +862,7 @@ static int luaproc_destroy_channel( lua_State *L ) {
                      chname );
     blockedlp = &chan->recv;
   }
-  while (( lp = list_remove( blockedlp )) != NULL ) {
+  while (( lp = __list_remove( blockedlp )) != NULL ) {
     /* return an error to each process */
     lua_pushnil( lp->lstate );
     lua_pushstring( lp->lstate, lua_tostring( L, -1 ));
